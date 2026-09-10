@@ -102,15 +102,20 @@ export default function (pi: ExtensionAPI) {
   });
 
   // ② 收工拦截：有未体检改动 → 注入 /bob 指令（替代 Stop hook 的 block）
+  //   pi-multi-account 等扩展替换会话后本实例会 stale：静默降级，标记留给新会话的新实例自愈。
   pi.on("agent_settled", async (_event, ctx) => {
     const cwd = ctx.cwd || cwdCache || process.cwd();
     if (pendingState(cwd) !== "pending") return;
     const cfg = cfgFor(ctx);
-    await pi.sendUserMessage(
+    try {
+      await pi.sendUserMessage(
       `收工被 bob 门禁拦下：工作区有未体检的编码改动（本轮编辑过 ${cfg.srcPaths.join(" 或 ")}）。不得以死代码/无行为变更为由跳过。\n\n` +
       BOB_PROMPT(workflowFilePath(), cfg.verifyCommand),
       { deliverAs: "followUp", triggerTurn: true } as any,
-    );
+      );
+    } catch (e) {
+      if (!String(e).includes("stale")) throw e; // stale = 会话已换代，新实例接管
+    }
   });
 
   // ③ /bob 命令：手动触发体检
@@ -118,10 +123,15 @@ export default function (pi: ExtensionAPI) {
     description: "Bob 五站流水线体检当前编码改动（侦察→对抗验证→修复→门禁）",
     handler: async (_args, ctx) => {
       const cfg = cfgFor(ctx);
-      await pi.sendUserMessage(BOB_PROMPT(workflowFilePath(), cfg.verifyCommand), {
-        deliverAs: "followUp",
-        triggerTurn: true,
-      } as any);
+      try {
+        await pi.sendUserMessage(BOB_PROMPT(workflowFilePath(), cfg.verifyCommand), {
+          deliverAs: "followUp",
+          triggerTurn: true,
+        } as any);
+      } catch (e) {
+        if (!String(e).includes("stale")) throw e;
+        ctx.ui.notify("会话已换代，请在新会话里重跑 /bob", "warning");
+      }
     },
   });
 
