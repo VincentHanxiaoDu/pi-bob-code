@@ -1,0 +1,15 @@
+{
+  "name": "pi-bob-code",
+  "version": "0.1.0",
+  "description": "Bob 五站流水线 for pi：编码改动强制过 侦察→对抗验证→修复→门禁 的质量闸（pi 扩展，改编自 Kingo 的 digitaltwin bob-pipeline）",
+  "keywords": ["pi-package", "pi", "code-review", "quality-gate"],
+  "license": "MIT",
+  "type": "module",
+  "pi": {
+    "extensions": ["extensions"]
+  },
+  "files": ["extensions", "workflows", "README.md"],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  }
+}
