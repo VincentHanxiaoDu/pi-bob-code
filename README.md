@@ -70,6 +70,12 @@ pi install git:github.com/VincentHanxiaoDu/pi-bob-code
 | 结构化输出 schema | 子代理回纯 JSON 文本，流水线宽松解析 |
 | 硬编码 digitaltwin 仓库路径/锚点/不变量 | 全部进 `bob.config.json` |
 
+## 已知共存问题
+
+- **pi-multi-account**：切账户会替换会话，旧实例的 `agent_settled` 偶发打印一条 stale 日志。
+  属良性竞态：待检标记持久在 `.git/`，新会话的新实例自愈（下次编码改动照常拦截）。
+  插件侧已把 stale 降级为静默（`assertActive` 抛错即放弃本轮注入）。
+
 ## 设计取舍
 
 - **标记放 `.git/` 内**：不进工作区、不被 git 跟踪（沿用原版纪律）；无 `.git` 时退回 `.pi/`。
